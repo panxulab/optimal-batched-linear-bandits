@@ -1,4 +1,4 @@
-Optimal-Batched-Linear-Bandits
+# Optimal-Batched-Linear-Bandits
 
 ## How to run
 
