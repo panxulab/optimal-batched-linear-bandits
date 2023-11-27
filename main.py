@@ -67,7 +67,7 @@ def main():
         arms[:,0]=theta
         
     agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1),End_of_optimism_alg(args.K,args.d,1),IDS(args.K,args.d,1)]
-    # agent=[IDS(args.K,args.d,1)]
+    
     bandits=[GaussianArm(np.dot(theta,arms[:,i]),1) for i in range(args.K)]
 
     LinearBandit = environment(bandits,arms,agents=agent)
