@@ -4,7 +4,7 @@
 
 ### Random Example
 
-`python main.py --seed 1  --K 3 --d 2 --T 10000  --num_sim 10 --verbose`
+`python main.py --seed 1  --K 3 --d 2 --T 100000  --num_sim 10 --verbose`
 
 `python main.py --seed 1 --K 5 --d 3 --T 10000  --num_sim 10 --verbose`
 
