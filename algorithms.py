@@ -69,7 +69,7 @@ class E3TC(object):
     
     def pull_arms_D_optimal_design(self,context,bandits,sum_pull,horizon):
         num_pull=self.D_optimal_design(context,sum_pull)
-        self.results_for_this_agent = np.zeros(horizon)
+        
         for k in range(self.num_arm):
             self.break_out=False
             num=0
@@ -80,6 +80,7 @@ class E3TC(object):
                 action=k
                 reward = bandits[action].draw()
                 self.results_for_this_agent[self.t] = bandits[action].mean_return
+                self.results_batch[self.t] = self.batch_complexity + 1
                 self.receive_reward(action,context[:,action],reward)
                 self.update_model()
                 num+=1
@@ -89,6 +90,7 @@ class E3TC(object):
     def receive_reward(self, arm, context, reward):
         self.last_cxt = context
         self.last_reward = reward
+        # self.results_batch[self.t]=self.batch_complexity+1
 
     def update_model(self, num_iter=None):
         self.Vector = self.Vector + self.last_reward * self.last_cxt
@@ -142,6 +144,7 @@ class E3TC(object):
                 action=k
                 reward = bandits[action].draw()
                 self.results_for_this_agent[self.t] = bandits[action].mean_return
+                self.results_batch[self.t] = self.batch_complexity+1
                 self.receive_reward(action,context[:,action],reward)
                 self.update_model()
             if break_out:
@@ -164,6 +167,9 @@ class E3TC(object):
         self.t=0;self.horizon=horizon
         K=context.shape[1]#num of all arms
         self.num_arm=K
+        self.results_for_this_agent = np.zeros(horizon)
+        self.results_batch = np.zeros(horizon)
+
         #Exploration
         self.pull_arms_D_optimal_design(context,bandits,np.sqrt(horizon),horizon)
         #Calculate
@@ -171,7 +177,7 @@ class E3TC(object):
         self.batch_complexity+=1
         '''batch 2'''
         # self.clear()
-        num_pull_D=self.pull_arms_D_optimal_design(context,bandits,np.sqrt(horizon),horizon)
+        # num_pull_D=self.pull_arms_D_optimal_design(context,bandits,np.sqrt(horizon),horizon)
         num_pull_T=self.pull_arms_track_and_stop(context,bandits,w,horizon)
         # sum_pull_second_batch=num_pull_D+num_pull_T
         #Calculate stopping statistic Z
@@ -216,19 +222,22 @@ class E3TC(object):
             context,cols_to_select=self.successive_elimination(varepsilon,context)
             bandits=[bandits[i] for i in cols_to_select]
             l+=1;self.batch_complexity+=1
+
         '''Commit'''
         action=0
-        if self.t<horizon:
-            self.batch_complexity+=1
         while self.t<horizon:
             reward = bandits[action].draw()
             self.results_for_this_agent[self.t] = bandits[action].mean_return
+            self.results_batch[self.t] = self.batch_complexity+1
             self.receive_reward(action,context[:,action],reward)
-            self.update_model()
-        return self.results_for_this_agent,self.batch_complexity
+            # self.update_model()
+            if self.t == horizon-1:
+                self.batch_complexity+=1
+            self.t+=1
+        return self.results_for_this_agent,self.batch_complexity,self.results_batch
 
 class LinUCB(object):
-    def __init__(self, num_arm, dim_context, nu, reg=1.0, C=0.5,name='OFUL'):
+    def __init__(self, num_arm, dim_context, nu, reg=1.0, C=0.5,name='rs-OFUL'):
         self.nu = nu
         self.reg = reg  #regularizer
         self.num_arm = num_arm
@@ -280,8 +289,11 @@ class LinUCB(object):
         self.theta = np.dot(self.DesignInv, self.Vector)
 
     def run(self,context,bandits,horizon):
-        self.batch_complexity=1
+        self.batch_complexity=0
+
         results_for_this_agent = np.zeros(horizon)
+        self.results_batch = np.zeros(horizon)
+
         tau=self.t
         while self.t<horizon:
             self.update_model_parameter()
@@ -291,15 +303,16 @@ class LinUCB(object):
             while np.linalg.det(Omega)<=(1+self.C)*np.linalg.det(self.DesignInv) and self.t<horizon:
                 reward = bandits[action].draw()
                 results_for_this_agent[self.t] = bandits[action].mean_return
+                self.results_batch[self.t] = self.batch_complexity
                 self.receive_reward(action,context[:,action],reward)
                 self.update_model()
-        return results_for_this_agent,self.batch_complexity
+        return results_for_this_agent,self.batch_complexity,self.results_batch
 
 class SuccessiveElimination(object):
     """
     Algorithm in Amin's paper and bandit book
     """
-    def __init__(self, num_arm, dim_context,reg=1.0, gamma=1.0,  name='Phased elimination with D-optimal exploration'):
+    def __init__(self, num_arm, dim_context,reg=1.0, gamma=1.0,  name='PhaElimD'):
         self.reg=reg
         self.num_arm = num_arm
         self.dim_context = dim_context
@@ -359,7 +372,7 @@ class SuccessiveElimination(object):
     
     def pull_arms_D_optimal_design(self,context,bandits,sum_pull,horizon):
         num_pull=self.D_optimal_design(context,sum_pull)
-        self.results_for_this_agent = np.zeros(horizon)
+        
         
         for k in range(self.num_arm):
             self.break_out=False
@@ -371,6 +384,7 @@ class SuccessiveElimination(object):
                 action=k
                 reward = bandits[action].draw()
                 self.results_for_this_agent[self.t] = bandits[action].mean_return
+                self.results_batch[self.t] = self.batch_complexity+1
                 self.receive_reward(action,context[:,action],reward)
                 self.update_model()
                 num+=1
@@ -403,6 +417,8 @@ class SuccessiveElimination(object):
         self.t=0;self.batch_complexity=0
         l=1
         K=context.shape[1]
+        self.results_for_this_agent = np.zeros(horizon)
+        self.results_batch = np.zeros(horizon)
         while context.shape[1]>1 and self.t<horizon:
             # self.clear()
             num_pull=horizon**(1-1/(2**l))
@@ -420,15 +436,16 @@ class SuccessiveElimination(object):
         while self.t<horizon:
             reward = bandits[action].draw()
             self.results_for_this_agent[self.t] = bandits[action].mean_return
+            self.results_batch[self.t] = self.batch_complexity
             self.receive_reward(action,context[:,action],reward)
             self.update_model()
-        return self.results_for_this_agent,self.batch_complexity
+        return self.results_for_this_agent,self.batch_complexity,self.results_batch
 
 class End_of_optimism_alg(object):
     """
     Optimal algorithm in end of optimism
     """
-    def __init__(self,  num_arm, dim_context,reg=1.0, gamma=1.0, c=1, name='Lattimore and Sepesvari (2017)'):
+    def __init__(self,  num_arm, dim_context,reg=1.0, gamma=1.0, c=1, name='EndOA'):
         self.reg=reg
         self.num_arm = num_arm
         self.dim_context = dim_context
@@ -556,7 +573,7 @@ class End_of_optimism_alg(object):
             results_for_this_agent[self.t] = bandits[action].mean_return
             self.receive_reward(action,context[:,action],reward)
             self.update_model()
-        return results_for_this_agent,horizon
+        return results_for_this_agent,horizon,np.arange(1,horizon+1)
 
 class IDS():
     """
@@ -724,4 +741,4 @@ class IDS():
                 self.update_model(context)
                 self.s+=1
 
-        return results_for_this_agent,horizon
+        return results_for_this_agent,horizon,np.arange(1,horizon+1)

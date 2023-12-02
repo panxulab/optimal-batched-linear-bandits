@@ -20,9 +20,9 @@ def parse_args():
     # default best-arm options
     parser.add_argument('--K', default=3, type=int,
                         help='number of total arms')
-    parser.add_argument('--d', default=2, type=int,
+    parser.add_argument('--d', default=3, type=int,
                         help='number of context dimension')
-    parser.add_argument('--T', default=10000, type=int,
+    parser.add_argument('--T', default=50000, type=int,
                         help='time horizon')
     parser.add_argument('--num_sim', default=10, type=int,
                         help='number of total simulation')
@@ -75,6 +75,7 @@ def main():
     LinearBandit.run(args.T,args.num_sim)
     LinearBandit.plot_results()
     LinearBandit.compute_batch_complexity()
+    LinearBandit.plot_results_batch()
 
 
 

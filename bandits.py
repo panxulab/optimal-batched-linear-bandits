@@ -16,17 +16,21 @@ class environment(object):#arms is a matrix
         for i in range(self.M):
             self.agents[i].clear() #initialization
 
-    def run(self, horizon=10000, experiments=1):
+    def run(self, horizon, experiments=1):
+        self.horizon=horizon
         results = np.zeros((self.M, experiments, horizon))
+        results_batch = np.zeros((self.M, experiments, horizon))
         batch_complexity=np.zeros((self.M,experiments))
         for m in tqdm(range(self.M)):
             agent = self.agents[m]
             for i in tqdm(range(experiments)):
                 self.reset()
                 #experiment for one agent and just one time
-                results[m][i],batch_complexity[m][i]=agent.run(self.arms,self.bandits,horizon)
+                results[m][i],batch_complexity[m][i],results_batch[m][i]=agent.run(self.arms,self.bandits,horizon)
 
-        self.results = results;self.batch_complexity=batch_complexity
+        self.results = results;self.batch_complexity=batch_complexity;self.results_batch=results_batch
+
+
     def compute_batch_complexity(self):
         if self.batch_complexity is None:
             print("No results of batch complexity yet.")
@@ -39,6 +43,38 @@ class environment(object):#arms is a matrix
         print("Batch complexity:")
         for m in range(self.M):
             print("%s: mean: %f, std: %f" % (self.agents[m].name, mean[m], std[m]))
+
+    def plot_result_batch(self, result, ax,name):
+        horizon = result.shape[1]
+        batch=result
+
+        y = np.mean(batch, axis=0)
+        x = np.arange(len(y))
+        std = np.std(batch, axis=0)
+        #print(len(std))
+
+        y_up_err = y + std
+        y_low_err = y - std
+        ax.plot(x, y,label=name)
+        ax.fill_between(x, y_low_err, y_up_err, alpha=0.3)
+        ax.set_yscale('log')
+
+    def plot_results_batch(self):
+        if self.results is None:
+            print("No results yet.")
+            return -1
+        fig, ax = plt.subplots()
+        for m in range(self.M):
+            result = self.results_batch[m]
+            self.plot_result_batch(result, ax,self.agents[m].name)
+        
+        plt.ylim(-5, self.horizon)
+        plt.legend(loc='upper right')
+        
+        plt.xlabel("Time step")
+        plt.ylabel("Batch")
+
+        plt.show()
 
     def plot_result(self, result, ax,name):
         horizon = result.shape[1]
@@ -74,11 +110,11 @@ class environment(object):#arms is a matrix
             if R>max_regret:
                 max_regret=R
 
-        plt.ylim(-100, 1.4*max_regret)
-        plt.legend()
+        plt.ylim(-100, 1200)
+        plt.legend(loc='upper right')
         
         plt.xlabel("Time step")
         plt.ylabel("Regret")
-        plt.savefig('d:\\research\\intern\\papers\\Optimal-Batched-Linear-Bandits\\code-Batched-Linear-Bandits\\image\\random_k_50_d_20.pdf', format='pdf')
+        # plt.savefig('image\\random_k_50_d_20.pdf', format='pdf')
         plt.show()
         
