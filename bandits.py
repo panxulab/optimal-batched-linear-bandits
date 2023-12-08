@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+
 from tqdm import tqdm
 
 class environment(object):#arms is a matrix
@@ -44,12 +47,14 @@ class environment(object):#arms is a matrix
         for m in range(self.M):
             print("%s: mean: %f, std: %f" % (self.agents[m].name, mean[m], std[m]))
 
-    def plot_result_batch(self, result, ax,name):
+    def plot_result_batch(self, result, ax,name,sample_interval=30):
         horizon = result.shape[1]
-        batch=result
+
+
+        batch=result[:, ::sample_interval]
 
         y = np.mean(batch, axis=0)
-        x = np.arange(len(y))
+        x = np.arange(len(y))*sample_interval
         std = np.std(batch, axis=0)
         #print(len(std))
 
@@ -64,19 +69,21 @@ class environment(object):#arms is a matrix
             print("No results yet.")
             return -1
         fig, ax = plt.subplots()
+        
         for m in range(self.M):
             result = self.results_batch[m]
+            # [::sample_interval, ::sample_interval]
             self.plot_result_batch(result, ax,self.agents[m].name)
         
-        plt.ylim(-5, self.horizon)
+        plt.ylim(0, self.horizon)
         plt.legend(loc='upper right')
         
         plt.xlabel("Time step")
         plt.ylabel("Batch")
+        plt.savefig('image\\random_k_3_d_2_batch.pdf',dpi=200, format='pdf',bbox_inches='tight')
+        # plt.show()
 
-        plt.show()
-
-    def plot_result(self, result, ax,name):
+    def plot_result(self, result, ax,name,sample_interval = 10):
         horizon = result.shape[1]
         top_mean = self.bandits[0].mean_return
         for i in range(1, self.K):
@@ -85,36 +92,43 @@ class environment(object):#arms is a matrix
         best_case_reward = top_mean * np.arange(1, horizon+1)
         cumulated_reward = np.cumsum(result, axis=1)
         regret = best_case_reward - cumulated_reward[:,:horizon]
-
+        
+        regret=regret[:, ::sample_interval]
         y = np.mean(regret, axis=0)
-        x = np.arange(len(y))
+        x = np.arange(len(y))*sample_interval
         std = np.std(regret, axis=0)
         #print(len(std))
 
         y_up_err = y + std
         y_low_err = y - std
         ax.plot(x, y,label=name)
-        ax.fill_between(x, y_low_err, y_up_err, alpha=0.3)
+        ax.fill_between(x, y_low_err, y_up_err, alpha=0.15)
         #plt.show()
         return np.max(regret)
 
     def plot_results(self):
+        mpl.rcParams['path.simplify_threshold'] = 0.999
         if self.results is None:
             print("No results yet.")
             return -1
         fig, ax = plt.subplots()
         max_regret=0
+        sample_interval = 10  # to make data size 1/10
         for m in range(self.M):
             result = self.results[m]
-            R=self.plot_result(result, ax,self.agents[m].name)
-            if R>max_regret:
-                max_regret=R
+            # [::sample_interval, ::sample_interval]
+            self.plot_result(result, ax,self.agents[m].name)
 
         plt.ylim(-100, 1200)
         plt.legend(loc='upper right')
         
-        plt.xlabel("Time step")
-        plt.ylabel("Regret")
-        # plt.savefig('image\\random_k_50_d_20.pdf', format='pdf')
-        plt.show()
+        plt.xlabel("Time step",labelpad=0)
+        plt.ylabel("Regret", labelpad=0)
+        
+        plt.subplots_adjust(left=0.095, bottom=0.08, right=1, top=1)
+
+        # plt.subplots_adjust( left=0.1,bottom=0.1,right=1, top=1)
+        plt.savefig('image\\research_eps_0.25.pdf',dpi=200, format='pdf',bbox_inches='tight')
+        
+        # plt.show()
         

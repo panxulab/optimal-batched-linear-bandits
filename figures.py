@@ -31,8 +31,8 @@ ellipse = Ellipse(xy=(0.95, 0.3), width=0.1, height=0.5, angle=-10, edgecolor='b
 ax.add_patch(ellipse)
 
 # Set the axes limits
-ax.set_xlim(-0.1, 1.1)
-ax.set_ylim(-0.1, 1.1)
+ax.set_xlim(-0.015, 1.1)
+ax.set_ylim(-0.015, 1.1)
 
 # Set the aspect of the plot to be equal
 ax.set_aspect('equal')
@@ -40,7 +40,7 @@ ax.set_aspect('equal')
 # Annotate the vectors
 ax.text(0.95, 0.35, r'$\hat\theta$', ha='left',fontsize='large')
 ax.plot(0.95, 0.3, 'ko')
-ax.text(1.05, 0, r'$x_1=(1,0)$', ha='left')
+ax.text(0.95, 0.05, r'$x_1=(1,0)$', ha='left')
 ax.text(0.05, 0.95, r'$x_3=(0,1)$', ha='left')
 ax.text(0.7, 0.2, r'$x_2=(1-\epsilon, 2\epsilon)$', ha='left')
 
@@ -53,6 +53,7 @@ ax.text(0.25, 0.75, r'$C_3$', ha='left',fontsize='large')
 
 # Turn off the axes
 ax.axis('off')
-
+plt.subplots_adjust(left=0, bottom=0, right=1., top=1.)
 # Show the plot
+plt.savefig('image\\end_instance.pdf', format='pdf',pad_inches=0,bbox_inches='tight')
 plt.show()
