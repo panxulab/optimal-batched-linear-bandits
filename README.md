@@ -43,3 +43,5 @@ Instances: $\theta=(1,0,0,0,0)$, $\mathcal X=(1,0,0,0,0),(0,1,0,0,0),(0,0,1,0,0)
 `python main.py    --d 5 --T 100000  --num_sim 10  --epsilon 0.01`  
 
 `python main.py    --d 5 --T 100000  --num_sim 10  --epsilon 0.2`  
+
+save data
