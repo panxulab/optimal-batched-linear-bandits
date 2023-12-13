@@ -28,8 +28,10 @@ def parse_args():
                         help='number of total simulation')
     parser.add_argument('--verbose', action='store_true', help='end of optimism instance')
 
-    parser.add_argument('--epsilon', default=0.2, type=float,
+    parser.add_argument('--epsilon', default=-1, type=float,
                         help='end of optimism parameter')
+    parser.add_argument('--research_on_epsilon', default=0, type=int,
+                        help='research on epsilon')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     return parser.parse_args()
 
@@ -67,19 +69,24 @@ def main():
         
         arms=np.random.uniform(0, 1, (args.d, args.K))
         arms[:,0]=theta
-        
-    agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1),End_of_optimism_alg(args.K,args.d,1),IDS(args.K,args.d,1)]
-    agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1),End_of_optimism_alg(args.K,args.d,1)]
-    agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1)]
     
+    
+    '''agent choices'''
+    if args.research_on_epsilon:
+        agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1)]
+    elif args.epsilon >= 0: #end of opt instances
+        agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1),End_of_optimism_alg(args.K,args.d,1),IDS(args.K,args.d,1)]
+    else:  #random instances
+        agent=[E3TC(args.K,args.d,1),SuccessiveElimination(args.K,args.d,1),LinUCB(args.K,args.d,1),End_of_optimism_alg(args.K,args.d,1)]
+
     bandits=[GaussianArm(np.dot(theta,arms[:,i]),1) for i in range(args.K)]
 
-    LinearBandit = environment(bandits,arms,agents=agent)
+    LinearBandit = environment(bandits,arms,agent,theta,args.epsilon)
 
     LinearBandit.run(args.T,args.num_sim)
     # LinearBandit.plot_results()
-    LinearBandit.compute_batch_complexity()
-    LinearBandit.plot_results_batch()
+    # LinearBandit.compute_batch_complexity()
+    # LinearBandit.plot_results_batch()
 
 
 

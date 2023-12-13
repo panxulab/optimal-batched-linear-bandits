@@ -6,12 +6,14 @@ import matplotlib as mpl
 from tqdm import tqdm
 
 class environment(object):#arms is a matrix
-    def __init__(self, bandits,arms,agents):
+    def __init__(self, bandits,arms,agents,theta,eps=0.01):
         self.bandits = bandits
-        
+        self.theta=theta
         self.agents = agents
         self.results = None
         self.K = arms.shape[1]
+        self.d=arms.shape[0]
+        self.eps=eps
         self.M = len(self.agents) #list of agents
         self.arms=arms
 
@@ -32,7 +34,14 @@ class environment(object):#arms is a matrix
                 results[m][i],batch_complexity[m][i],results_batch[m][i]=agent.run(self.arms,self.bandits,horizon)
 
         self.results = results;self.batch_complexity=batch_complexity;self.results_batch=results_batch
-
+        file_suffix = "npz"  
+        if self.eps<0:# random
+            file_name = f"results\\random_k_{self.K}_d_{self.d}.{file_suffix}"
+        elif self.M == 3: #research on eps
+            file_name = f"results\\research_eps_{self.eps}.{file_suffix}"
+        else:
+            file_name = f"results\\end_k_{self.K}_d_{self.d}_eps_{self.eps}.{file_suffix}"
+        np.savez(file_name, results=self.results,batch_complexity=self.batch_complexity,results_batch=self.results_batch,arms=self.arms,M=self.M,theta=self.theta,horizon=horizon,epsilon=self.eps)
 
     def compute_batch_complexity(self):
         if self.batch_complexity is None:
