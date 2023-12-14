@@ -27,6 +27,8 @@ Instances: $\theta=(1,0,0,0,0)$, $\mathcal X=(1,0,0,0,0),(0,1,0,0,0),(0,0,1,0,0)
 
 ### research on epsilon
 
+`python main.py    --d 2 --T 10000  --num_sim 10  --epsilon 0.005 --research_on_epsilon 1`
+
 `python main.py    --d 2 --T 10000  --num_sim 10  --epsilon 0.01 --research_on_epsilon 1`
 
 `python main.py    --d 2 --T 10000  --num_sim 10  --epsilon 0.05 --research_on_epsilon 1`
