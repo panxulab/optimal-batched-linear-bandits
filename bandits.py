@@ -156,13 +156,9 @@ class plot_figures(object):
         self.M = M #list of agents
         self.arms=arms
         self.epsilon=eps
-
-        self.names=["E4","PhaElimD","rs-OFUL"]
-        if self.M == 4:
-            self.names=["E4","PhaElimD","rs-OFUL","EndOA"]
-        if self.M == 5:
-            self.names = ["E4","PhaElimD","rs-OFUL","EndOA","IDS"]
-
+        self.names = ['$E^4$',"PhaElimD","rs-OFUL","EndOA","IDS"]
+        self.colors = ['r','g','b','orange','m']
+        self.linestyles=['-','-.',':','-','--']
         self.bandits = [GaussianArm(np.dot(self.theta,self.arms[:,i]),1) for i in range(self.K)]
     def compute_batch_complexity(self):
         if self.batch_complexity is None:
@@ -177,7 +173,7 @@ class plot_figures(object):
         for m in range(self.M):
             print("%s: mean: %f, std: %f" % (self.names[m], mean[m], std[m]))
 
-    def plot_result_batch(self, result, ax,name,sample_interval=30):
+    def plot_result_batch(self, result, ax,name,color,linestyle,sample_interval=30):
         horizon = result.shape[1]
 
 
@@ -190,8 +186,8 @@ class plot_figures(object):
 
         y_up_err = y + std
         y_low_err = y - std
-        ax.plot(x, y,label=name)
-        ax.fill_between(x, y_low_err, y_up_err, alpha=0.3)
+        ax.plot(x, y,label=name,color=color,linestyle=linestyle,alpha=0.8,linewidth=4)
+        ax.fill_between(x, y_low_err, y_up_err,color=color, alpha=0.3)
         ax.set_yscale('log')
 
     def plot_results_batch(self):
@@ -205,10 +201,15 @@ class plot_figures(object):
         for m in range(self.M):
             result = self.results_batch[m]
             # [::sample_interval, ::sample_interval]
-            self.plot_result_batch(result, ax,self.names[m])
+            
+            self.plot_result_batch(result, ax,self.names[m],self.colors[m],self.linestyles[m])
         
         plt.ylim(1, self.horizon)
-        plt.legend(loc='upper right')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        handles.append(handles.pop(0))
+        labels.append(labels.pop(0))
+        plt.legend(handles, labels,loc='upper left')
+        
         
         label_size=25
         if self.M == 3:
@@ -228,7 +229,7 @@ class plot_figures(object):
         
         plt.close(fig)
 
-    def plot_result(self, result, ax,name,sample_interval = 10):
+    def plot_result(self, result, ax,name,color,linestyle,sample_interval = 10):
         if self.horizon>30000:
             sample_interval=sample_interval*4
         if self.horizon>80000:
@@ -252,10 +253,10 @@ class plot_figures(object):
 
         y_up_err = y + std
         y_low_err = y - std
-        ax.plot(x, y,label=name)
-        ax.fill_between(x, y_low_err, y_up_err, alpha=0.15)
-        #plt.show()
-        return np.max(regret)
+        ax.plot(x, y,color=color,linestyle=linestyle,label=name,linewidth=4)
+        ax.fill_between(x, y_low_err, y_up_err,color=color, alpha=0.15)
+        
+        
 
     def plot_results(self):
         matplotlib.rcParams.update({'font.size': 20})
@@ -265,12 +266,11 @@ class plot_figures(object):
             print("No results yet.")
             return -1
         fig, ax = plt.subplots(figsize=figsize)
-        max_regret=0
+        max_regret = 0
         sample_interval = 10  # to make data size 1/10
         for m in range(self.M):
             result = self.results[m]
-            # [::sample_interval, ::sample_interval]
-            self.plot_result(result, ax,self.names[m])
+            self.plot_result(result, ax,self.names[m],self.colors[m],self.linestyles[m])
         d=self.d
         if self.M == 5: #end of opt
             if d ==2 :
@@ -289,10 +289,11 @@ class plot_figures(object):
         else: #research on epsilon
             y_max=1200
 
-
-
         plt.ylim(-100, y_max)
-        plt.legend(loc='upper left')
+        handles, labels = plt.gca().get_legend_handles_labels()
+        handles.append(handles.pop(0))
+        labels.append(labels.pop(0))
+        plt.legend(handles, labels,loc='upper left')
 
         label_size=25
         if self.M == 3:
@@ -315,3 +316,40 @@ class plot_figures(object):
         plt.savefig(filename,dpi=200, format='pdf',bbox_inches='tight')
         # plt.show()
         plt.close(fig)
+
+    def plot_each(self):
+        '''plot results in each independent experiment'''
+        '''sanity check for high variance algorithm'''
+        # matplotlib.rcParams.update({'font.size': 20})
+        
+        # mpl.rcParams['path.simplify_threshold'] = 0.999
+        
+        # fig, ax = plt.subplots(figsize=figsize)
+        max_regret=0
+        sample_interval = 10  # to make data size 1/10
+        
+        result = self.results[3]
+        
+        horizon = result.shape[1]
+        top_mean = self.bandits[0].mean_return
+        for i in range(1, self.K):
+            if self.bandits[i].mean_return > top_mean:
+                top_mean = self.bandits[i].mean_return
+        best_case_reward = top_mean * np.arange(1, horizon+1)
+        cumulated_reward = np.cumsum(result, axis=1)
+        regret = best_case_reward - cumulated_reward[:,:horizon]
+
+        plt.figure(figsize=(15, 100))
+
+        for i in range(10):
+            plt.subplot(10, 1, i + 1)
+            plt.scatter(range(10000), regret[i, :], s=1)
+            plt.title(f"Row {i+1}")
+            plt.xlabel("T")
+            plt.ylabel("Value")
+        # plt.tight_layout()
+        plt.show()
+
+        
+       
+        

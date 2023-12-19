@@ -5,7 +5,7 @@ import os
 folder_path = "results"
 file_list = os.listdir(folder_path)
 
-# filename="end_k_5_d_3_eps_0.1.npz"
+
 for filename in file_list:
     loaded_data = np.load(os.path.join(folder_path, filename))
     results = loaded_data["results"]
