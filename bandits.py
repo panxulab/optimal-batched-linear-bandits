@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib
 from arms import *
+import os
 
 from tqdm import tqdm
 
@@ -28,11 +29,13 @@ class environment(object):#arms is a matrix
         results_batch = np.zeros((self.M, experiments, horizon))
         batch_complexity=np.zeros((self.M,experiments))
         for m in tqdm(range(self.M)):
-            agent = self.agents[m]
-            for i in tqdm(range(experiments)):
-                self.reset()
-                #experiment for one agent and just one time
-                results[m][i],batch_complexity[m][i],results_batch[m][i]=agent.run(self.arms,self.bandits,horizon)
+            if m == 0:
+                agent = self.agents[m]
+                for i in tqdm(range(experiments)):
+                    self.reset()
+                    #experiment for one agent and just one time
+                    results[m][i],batch_complexity[m][i],results_batch[m][i]=agent.run(self.arms,self.bandits,horizon)
+        
 
         self.results = results;self.batch_complexity=batch_complexity;self.results_batch=results_batch
         file_suffix = "npz"  
@@ -42,7 +45,19 @@ class environment(object):#arms is a matrix
             file_name = f"results\\research_eps_{self.eps}.{file_suffix}"
         else:
             file_name = f"results\\end_k_{self.K}_d_{self.d}_eps_{self.eps}.{file_suffix}"
+
+        loaded_data = np.load(file_name)
+        results = loaded_data["results"]
+        batch_complexity = loaded_data["batch_complexity"]
+        results_batch = loaded_data["results_batch"]
+        results[0] = self.results[0]
+        batch_complexity[0] = self.batch_complexity[0]
+        results_batch[0] = self.results_batch[0]
+
         np.savez(file_name, results=self.results,batch_complexity=self.batch_complexity,results_batch=self.results_batch,arms=self.arms,M=self.M,theta=self.theta,horizon=horizon,epsilon=self.eps)
+
+        #just change results in npz data for E4 algorithm
+        np.savez(file_name, results=results,batch_complexity=batch_complexity,results_batch=results_batch,arms=self.arms,M=self.M,theta=self.theta,horizon=horizon,epsilon=self.eps)
 
     def compute_batch_complexity(self):
         if self.batch_complexity is None:
@@ -90,8 +105,8 @@ class environment(object):#arms is a matrix
         
         plt.xlabel("Time step")
         plt.ylabel("Batch")
-        plt.savefig('image\\random_k_3_d_2_batch.pdf',dpi=200, format='pdf',bbox_inches='tight')
-        # plt.show()
+        # plt.savefig('image\\random_k_3_d_2_batch.pdf',dpi=200, format='pdf',bbox_inches='tight')
+        plt.show()
 
     def plot_result(self, result, ax,name,sample_interval = 10):
         horizon = result.shape[1]
@@ -138,9 +153,9 @@ class environment(object):#arms is a matrix
         plt.subplots_adjust(left=0.095, bottom=0.08, right=1, top=1)
 
         # plt.subplots_adjust( left=0.1,bottom=0.1,right=1, top=1)
-        plt.savefig('image\\research_eps_0.25.pdf',dpi=200, format='pdf',bbox_inches='tight')
+        # plt.savefig('image\\research_eps_0.25.pdf',dpi=200, format='pdf',bbox_inches='tight')
         
-        # plt.show()
+        plt.show()
 
 class plot_figures(object):
     '''plot figures after collecting data'''
@@ -349,7 +364,3 @@ class plot_figures(object):
             plt.ylabel("Value")
         # plt.tight_layout()
         plt.show()
-
-        
-       
-        

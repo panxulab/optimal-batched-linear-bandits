@@ -131,10 +131,11 @@ class E3TC(object):
         T=horizon
         alpha=1+self.dim_context*np.log(np.log(T))**4/np.log(T)
         threshold=min((np.log(T))**(1+self.gamma),T/(2*context.shape[1]))
+        
         num_pull=np.minimum(w*alpha*np.log(T),threshold)
         # num_pull=w*alpha*np.log(T)
         num_pull=np.ceil(num_pull).astype(int)
-        num_pull[self.best_arm]=0
+        
         for k in range(self.num_arm):
             break_out=False
             for _ in range(num_pull[k]):
@@ -149,6 +150,7 @@ class E3TC(object):
                 self.update_model()
             if break_out:
                 break
+
         return num_pull
         
     def successive_elimination(self,varepsilon,context):
