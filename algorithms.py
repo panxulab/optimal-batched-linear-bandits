@@ -99,11 +99,15 @@ class E3TC(object):
         self.theta = np.dot(self.DesignInv, self.Vector)
         self.t += 1
 
-    def track_and_stop_proportion(self,context):
+    def track_and_stop_proportion(self,context,horizon):
         self.estimate_mean=context.T@self.theta
         self.best_arm=np.argmax(self.estimate_mean)
         best_mean=self.estimate_mean[self.best_arm]
+
         Delta=best_mean-self.estimate_mean
+        # Delta = Delta - 4/(np.log(np.log(horizon)))
+        Delta[self.best_arm] = 0
+
         K=context.shape[1]
 
         w = cp.Variable(K)  
@@ -129,7 +133,9 @@ class E3TC(object):
 
     def pull_arms_track_and_stop(self,context,bandits,w,horizon):
         T=horizon
-        alpha=1+self.dim_context*np.log(np.log(T))**4/np.log(T)
+        # alpha = 1+self.dim_context*np.log(np.log(T))**4/np.log(T)
+        # alpha = (1+1/np.log(np.log(T)))*(1+self.dim_context*np.log(np.log(T))**4/np.log(T))
+        alpha = (1+1/np.log(np.log(T)))*(1+self.dim_context*np.log(np.log(T))/np.log(T))
         threshold=min((np.log(T))**(1+self.gamma),T/(2*context.shape[1]))
         
         num_pull=np.minimum(w*alpha*np.log(T),threshold)
@@ -175,7 +181,7 @@ class E3TC(object):
         #Exploration
         self.pull_arms_D_optimal_design(context,bandits,np.sqrt(horizon),horizon)
         #Calculate
-        w=self.track_and_stop_proportion(context)
+        w=self.track_and_stop_proportion(context,horizon)
         self.batch_complexity+=1
         '''batch 2'''
         # self.clear()
