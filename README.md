@@ -1,4 +1,19 @@
-# Optimal-Batched-Linear-Bandits
+# Optimal Batched Linear Bandits
+
+### <p align="center">[ICML 2024]</p>
+
+<p align="center">
+  <a href="">Xuanfei Ren</a><sup>*</sup> ·
+  <a href="https://tianyuanjin.github.io/">Tianyuan Jin</a><sup>†</sup> ·
+  <a href="https://panxulab.github.io/">Pan Xu</a><sup>‡</sup>
+</p>
+<p align="center">
+<sup>*</sup> University of Science and Technology of China ·  
+<sup>†</sup> National University of Singapore ·
+<sup>‡</sup> Duke University ·
+</p>
+
+Implementation of the paper "Optimal Batched Linear Bandits".
 
 ## How to run
 
@@ -47,3 +62,13 @@ Instances: $\theta=(1,0,0,0,0)$, $\mathcal X=(1,0,0,0,0),(0,1,0,0,0),(0,0,1,0,0)
 `python main.py --seed 1 --K 9 --d 5 --T 50000  --num_sim 10 --verbose`
 
 `python main.py --seed 1 --K 50 --d 20 --T 50000  --num_sim 10 --verbose`
+
+## Citation
+```
+@inproceedings{ren2024optimal,
+  title={Optimal Batched Linear Bandits},
+  author={Ren, Xuanfei and Jin, Tianyuan and Xu, Pan},
+  booktitle={International Conference on Machine Learning (ICML)},
+  year={2024}
+}
+```
