@@ -10,7 +10,7 @@
 <p align="center">
 <sup>*</sup> University of Science and Technology of China ·  
 <sup>†</sup> National University of Singapore ·
-<sup>‡</sup> Duke University ·
+<sup>‡</sup> Duke University
 </p>
 
 Implementation of the paper "Optimal Batched Linear Bandits".
